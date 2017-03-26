@@ -38,7 +38,7 @@ var server = http.createServer(function (req, res) {
     catch (e) {
         console.log(e.stack);
     }
-}).listen(port);
+}).listen(process.env.PORT || port);
 
 
 var CONTENT_TYPE =
