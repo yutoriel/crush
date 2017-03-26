@@ -248,7 +248,7 @@ phina.define('MainScene', {
 phina.main(function() {
   var app = GameApp({
     title: 'こわせ！',
-    startLabel: 'title',
+    startLabel: 'splash',
     width: Screen.width,
     height: Screen.height,
     backgroundColor: '#222',
