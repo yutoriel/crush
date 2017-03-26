@@ -54,10 +54,7 @@ phina.define('Crusher', {
     var direction = Vector2.sub(this.startPoint, this.endPoint);
     var accell = point.deltaPosition.length();
     var speed = direction.mul(accell).div(point.time).negate();
-    //console.info(this.startPoint);
-    //console.info(this.endPoint);
-    //console.info(direction);
-    this.speed = this.speed.add(speed);
+    this.speed.add(speed);
     this.start = true;
   },
   collideWall: function () {
