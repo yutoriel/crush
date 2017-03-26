@@ -9,6 +9,8 @@ phina.define('Point', {
   time: 0,
   init: function () {
     this.superInit();
+    this.time = 0;
+    this.updateCount = 0;
   },
   onpointstart: [],
   onpointing: [],
@@ -19,17 +21,11 @@ phina.define('Point', {
     var dx = Math.abs(this.position.x - px);
     var dy = Math.abs(this.position.y - py);
     this.deltaPosition.set(dx, dy);
-    this.position.set(px, py)
-    //console.info('dx={0},dy={1}'.format(this.point.deltaPos.x, this.point.deltaPos.y));
-    //console.info('px={0},py={1}'.format(this.point.pos.x, this.point.pos.y));
+    this.position.set(px, py);
   },
   pointing: function (app) {
-    
     this.calcPointPosition(app);
-
-    if (!this.start && this.now === false) {
-      var p = app.pointer;
-      this.position.set(p.x, p.y);
+    if (!this.start && !this.now) {
       this.start = true;
       this.time = 0;
       for (var func of this.onpointstart) {
@@ -48,12 +44,11 @@ phina.define('Point', {
       }
     }
 
-    if (this.now === true) {
+    if (this.now) {
       this.time += app.deltaTime;
     }
   },
   pointend: function (app) {
-    this.calcPointPosition(app);
     if (this.now === true) {
       this.start = false;
       this.now = false;

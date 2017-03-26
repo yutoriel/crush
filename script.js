@@ -5,6 +5,22 @@ const Screen = {
   height: 960,
 };
 
+phina.define('DebugLabel', {
+  superClass: 'Label',
+  init: function (text) {
+    this.superInit(text);
+    this.fill = '#fff';
+    this.cleartimer = 1000;
+    this.time = 0;
+  },
+  update: function (app) {
+    this.time += app.deltaTime;
+    if (this.cleartimer < this.time) {
+      this.remove();
+    }
+  }
+});
+
 phina.define('Particle', {
   superClass: 'StarShape',
   init: function (color) {
@@ -41,16 +57,14 @@ phina.define('Crusher', {
     this.startPoint = Vector2(0, 0);
     this.endPoint = Vector2(0, 0);
     this.speed = Vector2(0, 0);
-    this.particleCount = 0;
   },
   onpointstart: function (point) {
-    this.startPoint = Vector2(point.position.x, point.position.y);
+    this.startPoint = point.position.clone();
   },
   onpointing: function (point) {
-
   },
   onpointend: function (point) {
-    this.endPoint = Vector2(point.position.x, point.position.y);
+    this.endPoint = point.position.clone();
     var direction = Vector2.sub(this.startPoint, this.endPoint);
     var accell = point.deltaPosition.length();
     var speed = direction.mul(accell).div(point.time).negate();
@@ -113,11 +127,11 @@ phina.define('Crusher', {
   },
   update: function (app) {
     this.app = app;
-    this.changeColor();
     this.position.add(this.speed);
-    this.speed.mul(0.995);
+    this.changeColor();
     this.createParticles();
     this.bounds();
+    this.speed.mul(0.995);
   },
 });
 
@@ -181,17 +195,13 @@ phina.define('MainScene', {
     point.onpointstart.push(crusher);
     point.onpointing.push(crusher);
     point.onpointend.push(crusher);
+    this.point = point;
 
     (15).times(function () {
       this.createBlock();
     }, this);
     
     this.crusher = crusher;
-
-    var debug = Label('debug:');
-    debug.x = this.gridX.center();
-    debug.y = this.gridY.center();
-    this.debug = debug;
   },
   createBlock: function (option) {
     option = option || {
