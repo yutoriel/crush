@@ -259,7 +259,7 @@ phina.define('MainScene', {
 
 phina.main(function() {
   var app = GameApp({
-    title: 'こわせ！',
+    title: 'crush',
     startLabel: 'splash',
     width: Screen.width,
     height: Screen.height,
