@@ -106,7 +106,7 @@ phina.define('Crusher', {
   },
   createParticles: function () {
     var dv = this.speed.length();
-    if (dv > 1) {
+    if (dv > 3) {
       const maxnum = 1;
       var num = dv > maxnum ? maxnum : dv;
       (num).times(function () {
@@ -199,7 +199,7 @@ phina.define('MainScene', {
     point.onpointend.push(crusher);
     this.point = point;
 
-    (15).times(function () {
+    (32).times(function () {
       this.createBlock();
     }, this);
     
