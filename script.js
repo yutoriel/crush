@@ -70,7 +70,7 @@ phina.define('Crusher', {
     var speed = direction.mul(accell).div(point.time).negate();
     if (Math.abs(speed.x) >= 30)  speed.x = speed.x > 0 ? 30 : -30;
     if (Math.abs(speed.y) >= 30)  speed.y = speed.y > 0 ? 30 : -30;
-    this.speed.add(speed);
+    this.speed = speed;
     this.start = true;
   },
   collideWall: function () {
