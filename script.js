@@ -41,7 +41,7 @@ phina.define('Particle', {
     this.scaleX = this.scaleY = this.scaleX * 0.96;
     this.position.add(this.v);
     this.v.mul(0.96);
-    if (dv < 0.1) {
+    if (this.scaleX < 0.1) {
       this.remove();
     }
   },
@@ -68,6 +68,8 @@ phina.define('Crusher', {
     var direction = Vector2.sub(this.startPoint, this.endPoint);
     var accell = point.deltaPosition.length();
     var speed = direction.mul(accell).div(point.time).negate();
+    if (Math.abs(speed.x) >= 30)  speed.x = speed.x > 0 ? 30 : -30;
+    if (Math.abs(speed.y) >= 30)  speed.y = speed.y > 0 ? 30 : -30;
     this.speed.add(speed);
     this.start = true;
   },
@@ -105,7 +107,7 @@ phina.define('Crusher', {
   createParticles: function () {
     var dv = this.speed.length();
     if (dv > 1) {
-      const maxnum = 3;
+      const maxnum = 1;
       var num = dv > maxnum ? maxnum : dv;
       (num).times(function () {
         var color = 'hsla(200, 75%, 50%, 1';
@@ -146,7 +148,7 @@ phina.define('Block', {
   },
   collide: function (collider) {
     var num = 32;
-    (16).times(function () {
+    (8).times(function () {
       var p = Particle(this.fill).addChildTo(this.parent);
       p.x = this.x;
       p.y = this.y;
