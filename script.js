@@ -5,6 +5,7 @@ const Screen = {
   height: 960,
 };
 
+var DebugLabelCount = 2;
 phina.define('DebugLabel', {
   superClass: 'Label',
   init: function (text) {
@@ -12,10 +13,17 @@ phina.define('DebugLabel', {
     this.fill = '#fff';
     this.cleartimer = 1000;
     this.time = 0;
+    this.x = Screen.width / 16 * 14;
+    this.y = Screen.height / 16 * DebugLabelCount++;
+    if (DebugLabelCount > 15) DebugLabelCount = 2;
   },
   update: function (app) {
     this.time += app.deltaTime;
     if (this.cleartimer < this.time) {
+      DebugLabelCount--;
+      if (DebugLabelCount < 2) {
+        DebugLabelCount = 2;
+      }
       this.remove();
     }
   }
@@ -38,7 +46,7 @@ phina.define('Particle', {
   update: function (app) {
     var dv = this.v.length();
     var dt = app.deltaTime;
-    this.scaleX = this.scaleY = this.scaleX * 0.96;
+    this.scaleX = this.scaleY *= 0.96;
     this.position.add(this.v);
     this.v.mul(0.96);
     if (this.scaleX < 0.1) {
@@ -53,7 +61,6 @@ phina.define('Crusher', {
     this.superInit(option);
     this.fill = 'hsla(200, 75%, 50%, 0.75)';
     
-    this.start = false;
     this.startPoint = Vector2(0, 0);
     this.endPoint = Vector2(0, 0);
     this.speed = Vector2(0, 0);
@@ -62,16 +69,17 @@ phina.define('Crusher', {
     this.startPoint = point.position.clone();
   },
   onpointing: function (point) {
+    //DebugLabel('dposX:{0}'.format(point.deltaPosition.x)).addChildTo(this.parent);
+    //DebugLabel('dposY:{0}'.format(point.deltaPosition.y)).addChildTo(this.parent);
   },
   onpointend: function (point) {
     this.endPoint = point.position.clone();
     var direction = Vector2.sub(this.startPoint, this.endPoint);
     var accell = point.deltaPosition.length();
     var speed = direction.mul(accell).div(point.time).negate();
-    if (Math.abs(speed.x) >= 30)  speed.x = speed.x > 0 ? 30 : -30;
-    if (Math.abs(speed.y) >= 30)  speed.y = speed.y > 0 ? 30 : -30;
+    if (Math.abs(speed.x) >= 50)  speed.x = speed.x > 0 ? 50 : -50;
+    if (Math.abs(speed.y) >= 50)  speed.y = speed.y > 0 ? 50 : -50;
     this.speed = speed;
-    this.start = true;
   },
   collideWall: function () {
     var collided = false;
@@ -110,7 +118,7 @@ phina.define('Crusher', {
       const maxnum = 1;
       var num = dv > maxnum ? maxnum : dv;
       (num).times(function () {
-        var color = 'hsla(200, 75%, 50%, 1';
+        const color = 'hsla(200, 75%, 50%, 1)';
         var particle = Particle(color).addChildTo(this.parent);
         particle.radius = this.radius;
         particle.x = this.x + this.radius * (Math.random()*0.5 + -Math.random()*0.5);
@@ -147,8 +155,8 @@ phina.define('Block', {
     });
   },
   collide: function (collider) {
-    var num = 32;
-    (8).times(function () {
+    const num = 8;
+    (num).times(function () {
       var p = Particle(this.fill).addChildTo(this.parent);
       p.x = this.x;
       p.y = this.y;
@@ -266,6 +274,6 @@ phina.main(function() {
     backgroundColor: '#222',
   });
   
-  app.fps = 120;
+  app.fps = 60;
   app.run();
 });

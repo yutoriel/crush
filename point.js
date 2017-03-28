@@ -20,8 +20,8 @@ phina.define('Point', {
     var py = app.pointer.y;
     var dx = Math.abs(this.position.x - px);
     var dy = Math.abs(this.position.y - py);
-    this.deltaPosition.set(dx, dy);
-    this.position.set(px, py);
+    this.deltaPosition = Vector2(dx, dy);
+    this.position = Vector2(px, py);
   },
   pointing: function (app) {
     this.calcPointPosition(app);
