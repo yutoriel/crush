@@ -5,21 +5,28 @@ const Screen = {
   height: 960,
 };
 
+const Assets = {
+  'sound': {
+    'se': 'https://yutoriel-crush.herokuapp.com/dissappear.mp3',
+  },
+};
+
 var DebugLabelCount = 2;
 phina.define('DebugLabel', {
   superClass: 'Label',
-  init: function (text) {
+  init: function (text, removable) {
+    this.removable = (removable === true);
     this.superInit(text);
     this.fill = '#fff';
     this.cleartimer = 1000;
     this.time = 0;
-    this.x = Screen.width / 16 * 14;
-    this.y = Screen.height / 16 * DebugLabelCount++;
+    this.x = Screen.width * 0.0625 * 13;
+    this.y = Screen.height * 0.0625 * DebugLabelCount++;
     if (DebugLabelCount > 15) DebugLabelCount = 2;
   },
   update: function (app) {
     this.time += app.deltaTime;
-    if (this.cleartimer < this.time) {
+    if (this.removable && this.cleartimer < this.time) {
       DebugLabelCount--;
       if (DebugLabelCount < 2) {
         DebugLabelCount = 2;
@@ -44,8 +51,6 @@ phina.define('Particle', {
     this.scaleX = this.scaleY = 1;
   },
   update: function (app) {
-    var dv = this.v.length();
-    var dt = app.deltaTime;
     this.scaleX = this.scaleY *= 0.96;
     this.position.add(this.v);
     this.v.mul(0.96);
@@ -79,7 +84,9 @@ phina.define('Crusher', {
     var speed = direction.mul(accell).div(point.time).negate();
     if (Math.abs(speed.x) >= 50)  speed.x = speed.x > 0 ? 50 : -50;
     if (Math.abs(speed.y) >= 50)  speed.y = speed.y > 0 ? 50 : -50;
-    this.speed = speed;
+    if (speed.length() > 10) {
+      this.speed = speed;
+    }
   },
   collideWall: function () {
     var collided = false;
@@ -116,14 +123,14 @@ phina.define('Crusher', {
     var dv = this.speed.length();
     if (dv > 3) {
       const maxnum = 1;
-      var num = dv > maxnum ? maxnum : dv;
+      const num = dv > maxnum ? maxnum : dv;
+      const color = 'hsla(200, 75%, 50%, 1)';
       (num).times(function () {
-        const color = 'hsla(200, 75%, 50%, 1)';
         var particle = Particle(color).addChildTo(this.parent);
         particle.radius = this.radius;
         particle.x = this.x + this.radius * (Math.random()*0.5 + -Math.random()*0.5);
         particle.y = this.y + this.radius * (Math.random()*0.5 + -Math.random()*0.5);
-        particle.v = this.speed.clone().negate().mul(0.7);
+        particle.v = this.speed.clone().negate();
         particle.v.x *= Math.random();
         particle.v.y *= Math.random();
       }, this);
@@ -136,11 +143,10 @@ phina.define('Crusher', {
     this.fill = 'hsla(200, 75%, {0}%, 1)'.format(brightness);
   },
   update: function (app) {
-    this.app = app;
     this.position.add(this.speed);
-    this.changeColor();
+    //this.changeColor();
     this.createParticles();
-    this.bounds();
+    this.collideWall();
     this.speed.mul(0.995);
   },
 });
@@ -163,12 +169,10 @@ phina.define('Block', {
       p.v = Vector2(Math.randint(-16,16), Math.randint(-16, 16));
       p.scaleX = p.scaleY = 3;
     }, this);
+    SoundManager.play('se');
     this.remove();
   },
-  update: function (app) {
-
-  },
-})
+});
 
 phina.define('MainScene', {
   superClass: 'DisplayScene',
@@ -212,6 +216,11 @@ phina.define('MainScene', {
     }, this);
     
     this.crusher = crusher;
+
+    // デバッグ用オブジェクト数ラベル
+    // this.objectsNum = DebugLabel(
+    //   'objNum:{0}'.format(this.children.length), false)
+    //   .addChildTo(this);
   },
   createBlock: function (option) {
     option = option || {
@@ -233,17 +242,20 @@ phina.define('MainScene', {
     this.label.text = 'Score:{0}'.format(this.score);
   },
   countDown: function (dt) {
-    this.timer -= dt / 1000;
-    this.timer = Math.round(this.timer * 100) / 100;
+    this.timer -= dt * 0.001;
     if (this.timer < 0) {
       this.timer = 0;
     }
-    if (this.timer % 1 !== 0) {
+    if (this.timer & 1 !== 0) {
       this.timelabel.text = String(this.timer);
     } else {
       this.timelabel.text = String(this.timer) + '.';
     }
-    this.timelabel.text = this.timelabel.text.paddingRight(5, '0');
+    if (this.timelabel.text.length > 5) {
+      this.timelabel.text = this.timelabel.text.substr(0, 5);
+    } else {
+      this.timelabel.text = this.timelabel.text.paddingRight(5, '0');
+    }
   },
   hitTest: function () {
     for (var ele of this.children) {
@@ -259,6 +271,8 @@ phina.define('MainScene', {
   update: function (app) {
     this.countDown(app.deltaTime);
     this.hitTest();
+    //this.objectsNum.text = 'objNum:{0}'.format(this.children.length);
+
     if (this.timer <= 0) {
       this.exit({score:this.score});
     }
@@ -272,6 +286,7 @@ phina.main(function() {
     width: Screen.width,
     height: Screen.height,
     backgroundColor: '#222',
+    assets: Assets,
   });
   
   app.fps = 60;
