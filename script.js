@@ -169,7 +169,7 @@ phina.define('Block', {
       p.v = Vector2(Math.randint(-16,16), Math.randint(-16, 16));
       p.scaleX = p.scaleY = 3;
     }, this);
-    SoundManager.play('se');
+    //SoundManager.play('se');
     this.remove();
   },
 });
