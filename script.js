@@ -5,11 +5,11 @@ const Screen = {
   height: 960,
 };
 
-const Assets = {
-  'sound': {
-    'se': 'https://yutoriel-crush.herokuapp.com/dissappear.mp3',
-  },
-};
+// const Assets = {
+//   'sound': {
+//     'se': 'https://yutoriel-crush.herokuapp.com/dissappear.mp3',
+//   },
+// };
 
 var DebugLabelCount = 2;
 phina.define('DebugLabel', {
@@ -286,7 +286,7 @@ phina.main(function() {
     width: Screen.width,
     height: Screen.height,
     backgroundColor: '#222',
-    assets: Assets,
+    //assets: Assets,
   });
   
   app.fps = 60;
