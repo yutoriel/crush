@@ -5,6 +5,9 @@ const Screen = {
   height: 960,
 };
 
+// 傾きで操作フラグ
+var TiltOperation = false;
+
 // const Assets = {
 //   'sound': {
 //     'se': 'https://yutoriel-crush.herokuapp.com/dissappear.mp3',
@@ -70,24 +73,35 @@ phina.define('Crusher', {
     this.endPoint = Vector2(0, 0);
     this.speed = Vector2(0, 0);
     this.tilt = Accelerometer();
+    if (TiltOperation) {
+      this.move = function () {
+          this.speed.x = this.tilt.orientation.gamma;
+          this.speed.y = this.tilt.orientation.beta;
+          this.position.add(this.speed);
+      }
+    } else {
+      this.move = function () {
+        this.position.add(this.speed);
+      }
+    }
   },
   onpointstart: function (point) {
-    // this.startPoint = point.position.clone();
+    this.startPoint = point.position.clone();
   },
   onpointing: function (point) {
-    //DebugLabel('dposX:{0}'.format(point.deltaPosition.x)).addChildTo(this.parent);
-    //DebugLabel('dposY:{0}'.format(point.deltaPosition.y)).addChildTo(this.parent);
+    // DebugLabel('dposX:{0}'.format(point.deltaPosition.x)).addChildTo(this.parent);
+    // DebugLabel('dposY:{0}'.format(point.deltaPosition.y)).addChildTo(this.parent);
   },
   onpointend: function (point) {
-    // this.endPoint = point.position.clone();
-    // var direction = Vector2.sub(this.startPoint, this.endPoint);
-    // var accell = point.deltaPosition.length();
-    // var speed = direction.mul(accell).div(point.time).negate();
-    // if (Math.abs(speed.x) >= 50)  speed.x = speed.x > 0 ? 50 : -50;
-    // if (Math.abs(speed.y) >= 50)  speed.y = speed.y > 0 ? 50 : -50;
-    // if (speed.length() > 10) {
-    //   this.speed = speed;
-    // }
+    this.endPoint = point.position.clone();
+    var direction = Vector2.sub(this.startPoint, this.endPoint);
+    var accell = point.deltaPosition.length();
+    var speed = direction.mul(accell).div(point.time).negate();
+    if (Math.abs(speed.x) >= 50)  speed.x = speed.x > 0 ? 50 : -50;
+    if (Math.abs(speed.y) >= 50)  speed.y = speed.y > 0 ? 50 : -50;
+    if (speed.length() > 10) {
+      this.speed = speed;
+    }
   },
   collideWall: function () {
     var collided = false;
@@ -144,9 +158,7 @@ phina.define('Crusher', {
     this.fill = 'hsla(200, 75%, {0}%, 1)'.format(brightness);
   },
   update: function (app) {
-    this.speed.x = this.tilt.orientation.gamma;
-    this.speed.y = this.tilt.orientation.beta;
-    this.position.add(this.speed);
+    this.move();
     //this.changeColor();
     this.createParticles();
     this.collideWall();
@@ -208,11 +220,13 @@ phina.define('MainScene', {
     crusher.x = this.gridX.center();
     crusher.y = this.gridY.span(15);
 
-    // var point = Point().addChildTo(this);
-    // point.onpointstart.push(crusher);
-    // point.onpointing.push(crusher);
-    // point.onpointend.push(crusher);
-    // this.point = point;
+    if (!TiltOperation) {
+      var point = Point().addChildTo(this);
+      point.onpointstart.push(crusher);
+      point.onpointing.push(crusher);
+      point.onpointend.push(crusher);
+      this.point = point;
+    }
 
     (32).times(function () {
       this.createBlock();
@@ -283,13 +297,17 @@ phina.define('MainScene', {
 });
 
 
-var TiltOperation = false;
 phina.define('MyTitleScene', {
   superClass: 'TitleScene',
   init: function (option) {
     option = option || {};
     this.superInit(option);
-    var tiltSwitchLabel = Label('Tilt:off').addChildTo(this);
+    var tiltSwitchLabel = Label().addChildTo(this);
+    if (TiltOperation) {
+      tiltSwitchLabel.text = '●傾き操作:on'
+    } else {
+      tiltSwitchLabel.text = '○傾き操作:off';
+    }
     tiltSwitchLabel.x = this.gridX.center();
     tiltSwitchLabel.y = this.gridY.span(5);
     tiltSwitchLabel.fill = '#fff';
@@ -298,24 +316,23 @@ phina.define('MyTitleScene', {
     tiltSwitch.y = tiltSwitchLabel.y;
     tiltSwitch.width = tiltSwitchLabel.width;
     tiltSwitch.height = tiltSwitchLabel.height;
-    tiltSwitch.on('pointend', function (e) {
-      console.info('touched');
-      if (this.text === 'Tilt:on') {
-        this.text = 'Tilt:off';
-        TiltOperation = false;
-      } else {
-        this.text = 'Tilt:on';
-        TiltOperation = true;
-      }
-    });
     this.clear('pointend');
     this.on('pointend', function (e){
       var p = e.pointer;
       var isHit = tiltSwitch.hitTest(p.x, p.y);
       if (isHit) {
-        console.info('hit');
+        if (tiltSwitchLabel.text === '●傾き操作:on') {
+          tiltSwitchLabel.text = '○傾き操作:off';
+          TiltOperation = false;
+        } else {
+          tiltSwitchLabel.text = '●傾き操作:on';
+          TiltOperation = true;
+        }
       }
-    })
+      if (p.y > Screen.height * 0.5) {
+        this.exit();
+      }
+    });
   },
 });
 
